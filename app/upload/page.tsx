@@ -19,6 +19,7 @@ export default function UploadPage() {
   const router = useRouter();
   const upload = useUpload();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>(upload.files);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -118,33 +119,58 @@ export default function UploadPage() {
           </div>
         </div>
 
+        {/* Hidden file inputs */}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="user"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
         {/* Drop zone */}
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className={`cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition ${
+          className={`rounded-2xl border-2 border-dashed p-8 text-center transition ${
             isDragging
               ? "border-primary bg-primary/5"
-              : "border-gray-200 hover:border-gray-300"
+              : "border-gray-200"
           }`}
         >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <span className="text-4xl">📁</span>
-          <p className="mt-3 text-sm font-medium">
-            <span className="text-primary">사진 선택</span> 또는 드래그해서
-            올리기
-          </p>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mb-4 text-sm text-gray-500">
             최소 {MIN_PHOTOS}장, 최대 {MAX_PHOTOS}장 · JPG, PNG
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              className="flex flex-1 flex-col items-center gap-2 rounded-xl bg-primary py-4 text-white shadow-md shadow-primary/20 transition active:scale-[0.97]"
+            >
+              <span className="text-2xl">📷</span>
+              <span className="text-sm font-semibold">직접 촬영</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="flex flex-1 flex-col items-center gap-2 rounded-xl border-2 border-gray-200 py-4 text-gray-700 transition hover:border-gray-300 active:scale-[0.97]"
+            >
+              <span className="text-2xl">🖼️</span>
+              <span className="text-sm font-semibold">앨범에서 선택</span>
+            </button>
+          </div>
+          <p className="mt-4 text-xs text-gray-400">
+            또는 이 영역에 드래그해서 올리기
           </p>
         </div>
 
@@ -190,14 +216,24 @@ export default function UploadPage() {
                   </button>
                 </div>
               ))}
-              {/* Add more button */}
+              {/* Add more buttons */}
               {files.length < MAX_PHOTOS && (
-                <button
-                  onClick={() => inputRef.current?.click()}
-                  className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-2xl text-gray-300 transition hover:border-gray-300 hover:text-gray-400"
-                >
-                  +
-                </button>
+                <>
+                  <button
+                    onClick={() => cameraRef.current?.click()}
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-primary/30 text-primary transition hover:border-primary/50"
+                  >
+                    <span className="text-lg">📷</span>
+                    <span className="text-[10px] font-medium">촬영</span>
+                  </button>
+                  <button
+                    onClick={() => inputRef.current?.click()}
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition hover:border-gray-300"
+                  >
+                    <span className="text-lg">+</span>
+                    <span className="text-[10px] font-medium">앨범</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
