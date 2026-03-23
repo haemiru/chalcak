@@ -155,7 +155,7 @@ export default function UploadPage() {
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
-              className="flex flex-1 flex-col items-center gap-2 rounded-xl bg-primary py-4 text-white shadow-md shadow-primary/20 transition active:scale-[0.97]"
+              className="flex flex-1 flex-col items-center gap-2 rounded-xl bg-primary py-4 text-white shadow-md shadow-primary/20 transition active:scale-[0.97] md:hidden"
             >
               <span className="text-2xl">📷</span>
               <span className="text-sm font-semibold">직접 촬영</span>
@@ -163,7 +163,7 @@ export default function UploadPage() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="flex flex-1 flex-col items-center gap-2 rounded-xl border-2 border-gray-200 py-4 text-gray-700 transition hover:border-gray-300 active:scale-[0.97]"
+              className="flex flex-1 flex-col items-center gap-2 rounded-xl border-2 border-gray-200 py-4 text-gray-700 transition hover:border-gray-300 active:scale-[0.97] md:border-primary md:bg-primary md:text-white md:shadow-md md:shadow-primary/20"
             >
               <span className="text-2xl">🖼️</span>
               <span className="text-sm font-semibold">앨범에서 선택</span>
@@ -221,7 +221,7 @@ export default function UploadPage() {
                 <>
                   <button
                     onClick={() => cameraRef.current?.click()}
-                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-primary/30 text-primary transition hover:border-primary/50"
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-primary/30 text-primary transition hover:border-primary/50 md:hidden"
                   >
                     <span className="text-lg">📷</span>
                     <span className="text-[10px] font-medium">촬영</span>
