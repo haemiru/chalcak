@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PLANS, ACTIVE_STYLES, type PlanKey } from "@/lib/constants";
+import { useUpload } from "@/lib/upload-context";
 
 export default function PaymentPage() {
   return (
@@ -24,9 +25,11 @@ function PaymentContent() {
   const styleName =
     ACTIVE_STYLES.find((s) => s.id === styleId)?.name ?? "스타일";
 
+  const upload = useUpload();
   const planKeys = Object.keys(PLANS) as PlanKey[];
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>("trial");
   const [isLoading, setIsLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
 
   const plan = PLANS[selectedPlan];
 
@@ -35,6 +38,29 @@ function PaymentContent() {
     setIsLoading(true);
 
     try {
+      // 1. 결제 전에 사진을 Supabase Storage에 미리 업로드
+      if (upload.files.length > 0) {
+        setStatusMsg("사진 업로드 중...");
+        const formData = new FormData();
+        upload.files.forEach((file) => formData.append("photos", file));
+
+        const uploadRes = await fetch("/api/upload-photos", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error || "사진 업로드 실패");
+        }
+
+        const { imageUrls } = await uploadRes.json();
+        // sessionStorage에 저장 (토스 결제 후 돌아왔을 때 사용)
+        sessionStorage.setItem("chalcak_imageUrls", JSON.stringify(imageUrls));
+      }
+
+      // 2. 토스 결제 요청
+      setStatusMsg("결제 준비 중...");
       const { loadTossPayments } = await import(
         "@tosspayments/payment-sdk"
       );
@@ -62,7 +88,11 @@ function PaymentContent() {
           failUrl: `${window.location.origin}/payment?style=${styleId}&error=failed`,
         });
       }
-    } catch {
+    } catch (err) {
+      setStatusMsg("");
+      if (err instanceof Error && err.message !== "사진 업로드 실패") {
+        // 토스 결제창 닫기 등은 에러 아님
+      }
       setIsLoading(false);
     }
   }
@@ -196,7 +226,7 @@ function PaymentContent() {
             className="flex min-h-[52px] w-full items-center justify-center rounded-xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/25 transition active:scale-[0.97] disabled:opacity-50"
           >
             {isLoading
-              ? "결제 준비 중..."
+              ? statusMsg || "결제 준비 중..."
               : `${plan.price.toLocaleString()}원 결제하기`}
           </button>
           <p className="mt-2 text-center text-[11px] text-gray-400">

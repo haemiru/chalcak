@@ -51,30 +51,38 @@ function GenerateContent() {
 
     async function startTraining() {
       try {
-        if (upload.files.length === 0) {
+        // sessionStorage에서 미리 업로드된 URL 확인 (결제 플로우)
+        const stored = sessionStorage.getItem("chalcak_imageUrls");
+        let imageUrls: string[] = [];
+
+        if (stored) {
+          imageUrls = JSON.parse(stored);
+          sessionStorage.removeItem("chalcak_imageUrls");
+        } else if (upload.files.length > 0) {
+          // fallback: Context에 파일이 있으면 직접 업로드
+          setStatus("uploading");
+          const formData = new FormData();
+          upload.files.forEach((file) => formData.append("photos", file));
+
+          const uploadRes = await fetch("/api/upload-photos", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!uploadRes.ok) {
+            const err = await uploadRes.json();
+            throw new Error(err.error || "사진 업로드 실패");
+          }
+
+          const data = await uploadRes.json();
+          imageUrls = data.imageUrls;
+        } else {
           setErrorMsg("업로드할 사진이 없습니다. 다시 시도해주세요.");
           setStatus("error");
           return;
         }
 
-        // 1. 사진을 Supabase Storage에 업로드
-        setStatus("uploading");
-        const formData = new FormData();
-        upload.files.forEach((file) => formData.append("photos", file));
-
-        const uploadRes = await fetch("/api/upload-photos", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json();
-          throw new Error(err.error || "사진 업로드 실패");
-        }
-
-        const { imageUrls } = await uploadRes.json();
-
-        // 2. AI 모델 학습 시작
+        // AI 모델 학습 시작
         setStatus("processing");
         const modelRes = await fetch("/api/create-model", {
           method: "POST",
