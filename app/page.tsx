@@ -315,17 +315,17 @@ function Footer() {
     <footer className="border-t border-gray-100 px-5 pb-28 pt-8 text-center text-xs text-gray-400 md:pb-8">
       <p>© 2024 찰칵AI. All rights reserved.</p>
       <p className="mt-1">
-        <a href="#" className="hover:text-gray-600">
+        <Link href="/terms" className="hover:text-gray-600">
           이용약관
-        </a>
+        </Link>
         {" · "}
-        <a href="#" className="hover:text-gray-600">
+        <Link href="/privacy" className="hover:text-gray-600">
           개인정보처리방침
-        </a>
+        </Link>
         {" · "}
-        <a href="#" className="hover:text-gray-600">
+        <Link href="/support" className="hover:text-gray-600">
           고객센터
-        </a>
+        </Link>
       </p>
     </footer>
   );
