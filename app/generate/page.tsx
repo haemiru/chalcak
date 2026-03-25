@@ -323,13 +323,20 @@ function GenerateContent() {
                 </p>
               </div>
             )}
-            {!pushEnabled && !pushDenied && !pushUnsupported && (
+            {!pushEnabled && !pushDenied && !pushUnsupported && !isKakaoUser && (
               <button
                 onClick={requestPush}
                 className="mt-8 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/25 transition active:scale-[0.97]"
               >
                 🔔 완료 알림 받기
               </button>
+            )}
+            {isKakaoUser && !pushEnabled && !pushUnsupported && (
+              <div className="mt-8 rounded-xl bg-yellow-50 p-4 text-center">
+                <p className="text-sm font-medium text-yellow-800">
+                  💬 완료 시 카카오톡으로 알려드릴게요
+                </p>
+              </div>
             )}
             {pushDenied && (
               <div className="mt-8 rounded-xl bg-orange-50 p-4 text-center">
