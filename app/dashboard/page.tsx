@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
-import { signOut } from "@/lib/auth";
 import { PLANS, ACTIVE_STYLES, DB, type PlanKey } from "@/lib/constants";
 import type { User } from "@supabase/supabase-js";
 
@@ -15,6 +14,12 @@ interface Subscription {
   monthly_credits: number;
   used_credits: number;
   next_billing_date: string;
+}
+
+interface Payment {
+  plan_type: PlanKey;
+  status: string;
+  created_at: string;
 }
 
 interface Generation {
@@ -29,6 +34,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [trialPayment, setTrialPayment] = useState<Payment | null>(null);
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,13 +51,22 @@ export default function DashboardPage() {
       setUser(authData.user);
       const userId = authData.user.id;
 
-      // Fetch subscription & generations in parallel
-      const [subRes, genRes] = await Promise.all([
+      // Fetch subscription, trial payment & generations in parallel
+      const [subRes, trialRes, genRes] = await Promise.all([
         supabase
           .from(DB.subscriptions)
           .select("*")
           .eq("user_id", userId)
           .eq("status", "active")
+          .single(),
+        supabase
+          .from(DB.payments)
+          .select("plan_type, status, created_at")
+          .eq("user_id", userId)
+          .eq("status", "paid")
+          .eq("plan_type", "trial")
+          .order("created_at", { ascending: false })
+          .limit(1)
           .single(),
         supabase
           .from(DB.generations)
@@ -62,16 +77,12 @@ export default function DashboardPage() {
       ]);
 
       if (subRes.data) setSubscription(subRes.data);
+      if (trialRes.data) setTrialPayment(trialRes.data);
       if (genRes.data) setGenerations(genRes.data);
       setLoading(false);
     }
     load();
   }, [router]);
-
-  async function handleSignOut() {
-    await signOut();
-    router.push("/");
-  }
 
   if (loading) {
     return (
@@ -81,7 +92,11 @@ export default function DashboardPage() {
     );
   }
 
-  const plan = subscription ? PLANS[subscription.plan] : null;
+  const plan = subscription
+    ? PLANS[subscription.plan]
+    : trialPayment
+      ? PLANS.trial
+      : null;
   const creditPercent = subscription
     ? Math.round(
         ((subscription.monthly_credits - subscription.used_credits) /
@@ -95,21 +110,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 px-5 py-3 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-lg items-center justify-between">
-          <Link href="/" className="text-lg font-extrabold text-primary">
-            찰칵AI
-          </Link>
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-gray-400"
-          >
-            로그아웃
-          </button>
-        </div>
-      </header>
-
       <div className="mx-auto max-w-lg px-5 pt-6">
         {/* User greeting */}
         <p className="text-sm text-gray-500">
@@ -129,11 +129,15 @@ export default function DashboardPage() {
                 {plan ? plan.label : "플랜 없음"}
               </p>
             </div>
-            {subscription && (
+            {subscription ? (
               <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
                 활성
               </span>
-            )}
+            ) : trialPayment ? (
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                체험권
+              </span>
+            ) : null}
           </div>
 
           {subscription && (
