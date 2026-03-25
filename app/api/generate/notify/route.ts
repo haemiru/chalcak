@@ -31,17 +31,27 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     const resultUrl = `${baseUrl}/result?tuneId=${tuneId}`;
 
-    // 1. Send email notification
-    const { data: user } = await db
+    // 1. Send email notification — Auth에서 직접 이메일 가져오기 (chalcak_users 미등록 케이스 대응)
+    let email: string | null = null;
+
+    const { data: userRow } = await db
       .from(DB.users)
       .select("email")
       .eq("id", userId)
       .single();
 
-    if (user?.email) {
+    if (userRow?.email) {
+      email = userRow.email;
+    } else {
+      // chalcak_users에 없으면 Supabase Auth에서 직접 조회
+      const { data: authUser } = await db.auth.admin.getUserById(userId);
+      email = authUser?.user?.email ?? null;
+    }
+
+    if (email) {
       try {
         await sendCompletionEmail({
-          to: user.email,
+          to: email,
           style,
           resultUrl,
         });
