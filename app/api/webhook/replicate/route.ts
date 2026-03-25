@@ -90,36 +90,10 @@ export async function POST(request: NextRequest) {
         webhookUrl,
       });
 
-      // Store prediction ID so we can link it back to the generation
-      // We append it to a metadata approach: store in tune_id as "trainingId|predictionId"
-      // Actually, keep it simple: store prediction_id alongside tune_id
-      // Since we don't have a prediction_id column, we'll look up by tune_id later
-      // The prediction webhook will need to know which generation to update
-      // Strategy: store prediction mapping in a temporary way
-      // For now, save prediction_id in the generation record's image_urls as metadata
+      // Store prediction_id in separate column (tune_id stays clean)
       await db
         .from(DB.generations)
-        .update({
-          image_urls: [],
-          // Store the prediction ID temporarily by updating tune_id to include it
-          // Better approach: use tune_id for training, and match via the version
-        })
-        .eq("tune_id", trainingId);
-
-      // Store prediction→training mapping by saving trained version in generation
-      // We'll use a convention: when prediction webhook fires, we look up by version
-      // Simpler: update tune_id to prediction ID so the prediction webhook can find it
-      // But we need training ID too. Let's keep tune_id as training ID and add
-      // the prediction ID as a query param in the webhook URL.
-      // Actually the cleanest approach: fire prediction with webhook URL containing tune_id
-      // Replicate doesn't support custom webhook params, so let's just update the
-      // generation record to also track the prediction.
-
-      // Store prediction mapping: update generation to include prediction_id
-      // We'll concatenate: "trainingId::predictionId"
-      await db
-        .from(DB.generations)
-        .update({ tune_id: `${trainingId}::${prediction.id}` })
+        .update({ prediction_id: prediction.id })
         .eq("tune_id", trainingId);
 
       console.log(
@@ -146,12 +120,11 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Find generation by prediction ID (stored as "trainingId::predictionId")
-      // Use a LIKE query to match the prediction ID
+      // Find generation by prediction_id
       const { data: gen } = await db
         .from(DB.generations)
         .select("tune_id, user_id, style")
-        .like("tune_id", `%::${predictionId}`)
+        .eq("prediction_id", predictionId)
         .single();
 
       if (!gen) {
@@ -164,17 +137,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Extract original training ID and restore tune_id
-      const trainingId = gen.tune_id.split("::")[0];
+      const trainingId = gen.tune_id;
 
-      // Save generated image URLs and restore tune_id to just the training ID
+      // Save generated image URLs
       const { error: updateError } = await db
         .from(DB.generations)
-        .update({
-          image_urls: images,
-          tune_id: trainingId,
-        })
-        .eq("tune_id", gen.tune_id);
+        .update({ image_urls: images })
+        .eq("prediction_id", predictionId);
 
       if (updateError) {
         console.error("Failed to update generation:", updateError);

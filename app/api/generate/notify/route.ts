@@ -14,7 +14,7 @@ function getSupabaseAdmin() {
 
 interface NotifyBody {
   userId: string;
-  tuneId: number;
+  tuneId: string;
   style: string;
 }
 
