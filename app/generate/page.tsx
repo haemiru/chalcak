@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ACTIVE_STYLES } from "@/lib/constants";
 import { useUpload } from "@/lib/upload-context";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 const ESTIMATED_MINUTES = 25;
@@ -41,6 +42,16 @@ function GenerateContent() {
   const [pushDenied, setPushDenied] = useState(false);
   const [pushUnsupported, setPushUnsupported] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isKakaoUser, setIsKakaoUser] = useState(false);
+
+  // Check if user logged in with Kakao
+  useEffect(() => {
+    createSupabaseBrowser().auth.getUser().then(({ data }: { data: { user: { app_metadata?: { provider?: string } } | null } }) => {
+      if (data.user?.app_metadata?.provider === "kakao") {
+        setIsKakaoUser(true);
+      }
+    });
+  }, []);
 
   // Check push support on mount
   useEffect(() => {
@@ -333,10 +344,10 @@ function GenerateContent() {
             {pushUnsupported && (
               <div className="mt-8 rounded-xl bg-gray-50 p-4 text-center">
                 <p className="text-sm font-medium text-gray-600">
-                  📧 이 브라우저는 푸시 알림을 지원하지 않아요
+                  {isKakaoUser ? "💬" : "📧"} 이 브라우저는 푸시 알림을 지원하지 않아요
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  완료 시 이메일로 알려드립니다
+                  완료 시 {isKakaoUser ? "카카오톡으로" : "이메일로"} 알려드립니다
                 </p>
               </div>
             )}
@@ -345,7 +356,7 @@ function GenerateContent() {
             <p className="mt-4 text-xs text-gray-400">
               이 화면을 닫아도 괜찮아요.
               <br />
-              완료 시 {pushEnabled ? "푸시 알림과 " : ""}이메일로 알려드립니다.
+              완료 시 {pushEnabled ? "푸시 알림과 " : ""}{isKakaoUser ? "카카오톡으로" : "이메일로"} 알려드립니다.
             </p>
           </>
         )}
