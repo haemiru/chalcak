@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { createTune } from "@/lib/astria";
-import { DB } from "@/lib/constants";
+import { DB, PLANS, PlanKey } from "@/lib/constants";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -78,6 +78,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "결제가 확인되지 않았습니다." },
         { status: 402 }
+      );
+    }
+
+    // Check subscription credits (skip for trial — trial has no subscription)
+    const { data: sub } = await db
+      .from(DB.subscriptions)
+      .select("plan, monthly_credits, used_credits")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single();
+
+    if (sub) {
+      const remaining = sub.monthly_credits - sub.used_credits;
+      if (remaining <= 0) {
+        return NextResponse.json(
+          { error: "이번 달 크레딧을 모두 사용했습니다. 플랜을 업그레이드하거나 다음 달까지 기다려주세요." },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Check tune limit — count tunes created this month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const { count: tuneCount } = await db
+      .from(DB.generations)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", monthStart);
+
+    const plan = sub?.plan as PlanKey | undefined;
+    const tuneLimit = plan ? PLANS[plan]?.tuneLimit ?? 1 : 1;
+
+    if ((tuneCount ?? 0) >= tuneLimit) {
+      return NextResponse.json(
+        { error: `이번 달 모델 학습 횟수(${tuneLimit}회)를 초과했습니다.` },
+        { status: 403 }
       );
     }
 

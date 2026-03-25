@@ -86,12 +86,30 @@ export async function POST(request: NextRequest) {
         console.error("Failed to update generation:", updateError);
       }
 
-      // 알림 전송 (이메일 + 푸시)
+      // 크레딧 차감
       const { data: gen } = await db
         .from(DB.generations)
         .select("user_id, style")
         .eq("tune_id", tuneId)
         .single();
+
+      if (gen) {
+        const { data: sub } = await db
+          .from(DB.subscriptions)
+          .select("id, used_credits")
+          .eq("user_id", gen.user_id)
+          .eq("status", "active")
+          .single();
+
+        if (sub) {
+          await db
+            .from(DB.subscriptions)
+            .update({ used_credits: sub.used_credits + images.length })
+            .eq("id", sub.id);
+        }
+      }
+
+      // 알림 전송 (이메일 + 푸시)
 
       if (gen) {
         try {
