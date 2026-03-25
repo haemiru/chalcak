@@ -40,9 +40,19 @@ function PaymentContent() {
     try {
       // 1. 결제 전에 사진을 Supabase Storage에 미리 업로드
       if (upload.files.length > 0) {
+        // 모바일 사진 리사이즈 (4000px→1024px, ~8MB→~200KB)
+        const { resizeImage } = await import("@/lib/resize-image");
+        setStatusMsg(`사진 최적화 중... (0/${upload.files.length})`);
+
+        const resized: File[] = [];
+        for (let i = 0; i < upload.files.length; i++) {
+          resized.push(await resizeImage(upload.files[i]));
+          setStatusMsg(`사진 최적화 중... (${i + 1}/${upload.files.length})`);
+        }
+
         setStatusMsg("사진 업로드 중...");
         const formData = new FormData();
-        upload.files.forEach((file) => formData.append("photos", file));
+        resized.forEach((file) => formData.append("photos", file));
 
         const uploadRes = await fetch("/api/upload-photos", {
           method: "POST",
