@@ -50,21 +50,26 @@ function PaymentContent() {
           setStatusMsg(`사진 최적화 중... (${i + 1}/${upload.files.length})`);
         }
 
-        setStatusMsg("사진 업로드 중...");
-        const formData = new FormData();
-        resized.forEach((file) => formData.append("photos", file));
+        // 1장씩 개별 업로드 (Vercel 4.5MB body 제한 대응)
+        const imageUrls: string[] = [];
+        for (let i = 0; i < resized.length; i++) {
+          setStatusMsg(`사진 업로드 중... (${i + 1}/${resized.length})`);
+          const formData = new FormData();
+          formData.append("photos", resized[i]);
 
-        const uploadRes = await fetch("/api/upload-photos", {
-          method: "POST",
-          body: formData,
-        });
+          const uploadRes = await fetch("/api/upload-photos", {
+            method: "POST",
+            body: formData,
+          });
 
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json();
-          throw new Error(err.error || "사진 업로드 실패");
+          if (!uploadRes.ok) {
+            const err = await uploadRes.json();
+            throw new Error(err.error || "사진 업로드 실패");
+          }
+
+          const data = await uploadRes.json();
+          imageUrls.push(...data.imageUrls);
         }
-
-        const { imageUrls } = await uploadRes.json();
         // sessionStorage에 저장 (토스 결제 후 돌아왔을 때 사용)
         sessionStorage.setItem("chalcak_imageUrls", JSON.stringify(imageUrls));
       }
