@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await db
       .from(DB.generations)
       .select("tune_id, style, image_urls, created_at")
-      .eq("tune_id", Number(tuneId))
+      .eq("tune_id", tuneId)
       .single();
 
     if (error || !data) {

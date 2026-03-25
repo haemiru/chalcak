@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { createTune } from "@/lib/astria";
+import { uploadTrainingData, createModel, createTraining } from "@/lib/replicate";
 import { DB, PLANS, PlanKey } from "@/lib/constants";
 
 function getSupabaseAdmin() {
@@ -118,31 +118,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Astria API — callback must be publicly reachable
+    // Call Replicate API — webhook must be publicly reachable
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL?.startsWith("http://localhost")
         ? process.env.VERCEL_URL
           ? `https://${process.env.VERCEL_URL}`
           : process.env.NEXT_PUBLIC_APP_URL
         : process.env.NEXT_PUBLIC_APP_URL;
-    const callbackUrl = `${appUrl}/api/webhook/astria`;
-    const tune = await createTune({
-      title: `${userId}-${style}-${Date.now()}`,
-      imageUrls,
-      className: "person",
-      callbackUrl,
+    const webhookUrl = `${appUrl}/api/webhook/replicate`;
+
+    // 1. Upload training images to Replicate (download → zip → upload)
+    const imageDataUrl = await uploadTrainingData(imageUrls);
+
+    // 2. Create model destination on Replicate (or reuse existing)
+    const modelName = `chalcak-${userId.replace(/[^a-z0-9-]/gi, "-")}-${Date.now()}`.toLowerCase();
+    const destination = await createModel(modelName);
+
+    // 3. Start Flux LoRA training with webhook
+    const training = await createTraining({
+      destination,
+      imageDataUrl,
+      triggerWord: "TOK",
+      webhookUrl,
     });
 
-    // Save to generations table
+    // Save to generations table (store training ID in tune_id column)
     await db.from(DB.generations).insert({
       user_id: userId,
-      tune_id: tune.id,
+      tune_id: training.id,
       style,
       image_urls: [],
     });
 
     return NextResponse.json(
-      { tuneId: tune.id, status: "processing" },
+      { tuneId: training.id, status: "processing" },
       { status: 201 }
     );
   } catch (error) {
