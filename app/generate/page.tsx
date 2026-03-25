@@ -38,7 +38,21 @@ function GenerateContent() {
   );
   const [elapsed, setElapsed] = useState(0);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushDenied, setPushDenied] = useState(false);
+  const [pushUnsupported, setPushUnsupported] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Check push support on mount
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setPushUnsupported(true);
+    } else if (Notification.permission === "denied") {
+      setPushDenied(true);
+    } else if (Notification.permission === "granted") {
+      // Auto-subscribe if already granted
+      autoSubscribePush();
+    }
+  }, []);
 
   // 결제 완료 후 진입 시: 사진 업로드 → 모델 학습 시작
   useEffect(() => {
@@ -143,30 +157,51 @@ function GenerateContent() {
     };
   }, [status, checkStatus]);
 
-  // Request push notification permission
+  // Subscribe to push (called after permission granted)
+  async function subscribePush() {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    });
+
+    // userId: searchParams에서 가져오거나 tuneId 사용
+    const userId = searchParams.get("userId") || tuneId || "anonymous";
+
+    await fetch("/api/push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        subscription: subscription.toJSON(),
+      }),
+    });
+
+    setPushEnabled(true);
+  }
+
+  // Auto-subscribe if permission already granted
+  async function autoSubscribePush() {
+    try {
+      await subscribePush();
+    } catch (err) {
+      console.error("Auto push subscription failed:", err);
+    }
+  }
+
+  // Request push notification permission (user clicks button)
   async function requestPush() {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (pushUnsupported) return;
 
     try {
       const permission = await Notification.requestPermission();
+      if (permission === "denied") {
+        setPushDenied(true);
+        return;
+      }
       if (permission !== "granted") return;
 
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      });
-
-      await fetch("/api/push", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: tuneId, // temp identifier
-          subscription: subscription.toJSON(),
-        }),
-      });
-
-      setPushEnabled(true);
+      await subscribePush();
     } catch (err) {
       console.error("Push subscription failed:", err);
     }
@@ -269,25 +304,48 @@ function GenerateContent() {
             </div>
 
             {/* Push notification prompt */}
-            {!pushEnabled && "Notification" in window && (
+            {pushEnabled && (
+              <div className="mt-8 flex items-center justify-center gap-2 rounded-xl bg-green-50 p-4">
+                <span className="text-lg">✅</span>
+                <p className="text-sm font-medium text-green-700">
+                  완료 시 푸시 알림을 보내드릴게요
+                </p>
+              </div>
+            )}
+            {!pushEnabled && !pushDenied && !pushUnsupported && (
               <button
                 onClick={requestPush}
-                className="mt-8 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 text-sm font-medium text-primary transition active:scale-[0.97]"
+                className="mt-8 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/25 transition active:scale-[0.97]"
               >
                 🔔 완료 알림 받기
               </button>
             )}
-            {pushEnabled && (
-              <p className="mt-8 text-sm text-green-600">
-                ✅ 완료 시 푸시 알림을 보내드릴게요
-              </p>
+            {pushDenied && (
+              <div className="mt-8 rounded-xl bg-orange-50 p-4 text-center">
+                <p className="text-sm font-medium text-orange-700">
+                  🔕 알림이 차단되어 있어요
+                </p>
+                <p className="mt-1 text-xs text-orange-500">
+                  브라우저 설정에서 알림을 허용해주세요
+                </p>
+              </div>
+            )}
+            {pushUnsupported && (
+              <div className="mt-8 rounded-xl bg-gray-50 p-4 text-center">
+                <p className="text-sm font-medium text-gray-600">
+                  📧 이 브라우저는 푸시 알림을 지원하지 않아요
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  완료 시 이메일로 알려드립니다
+                </p>
+              </div>
             )}
 
             {/* Close safe message */}
             <p className="mt-4 text-xs text-gray-400">
               이 화면을 닫아도 괜찮아요.
               <br />
-              완료 시 이메일과 푸시 알림으로 알려드립니다.
+              완료 시 {pushEnabled ? "푸시 알림과 " : ""}이메일로 알려드립니다.
             </p>
           </>
         )}

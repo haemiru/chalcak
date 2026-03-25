@@ -148,8 +148,11 @@ export default function UploadPage() {
               : "border-gray-200"
           }`}
         >
-          <p className="mb-4 text-sm text-gray-500">
+          <p className="mb-1 text-sm text-gray-500">
             최소 {MIN_PHOTOS}장, 최대 {MAX_PHOTOS}장 · JPG, PNG
+          </p>
+          <p className="mb-4 text-xs text-blue-500">
+            💡 더 좋은 품질을 위해 8장 이상 업로드를 추천합니다
           </p>
           <div className="flex gap-3">
             <button
