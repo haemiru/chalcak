@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useUpload } from "@/lib/upload-context";
 
-const MIN_PHOTOS = 5;
+const MIN_PHOTOS = 8;
 const MAX_PHOTOS = 15;
 
 const FACE_TIPS = [
@@ -152,7 +152,7 @@ export default function UploadPage() {
             최소 {MIN_PHOTOS}장, 최대 {MAX_PHOTOS}장 · JPG, PNG
           </p>
           <p className="mb-4 text-xs text-blue-500">
-            💡 더 좋은 품질을 위해 8장 이상 업로드를 추천합니다
+            💡 더 좋은 품질을 위해 12장 이상 업로드를 추천합니다
           </p>
           <div className="flex gap-3">
             <button

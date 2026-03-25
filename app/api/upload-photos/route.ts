@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const files = formData.getAll("photos") as File[];
 
-    if (files.length < 5 || files.length > 15) {
+    if (files.length < 8 || files.length > 15) {
       return NextResponse.json(
-        { error: "사진은 5~15장 사이여야 합니다." },
+        { error: "사진은 8~15장 사이여야 합니다." },
         { status: 400 }
       );
     }

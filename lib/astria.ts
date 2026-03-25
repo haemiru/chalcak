@@ -104,6 +104,8 @@ interface GenerateParams {
   negativePrompt?: string;
   numImages?: number;
   callbackUrl?: string;
+  superResolution?: boolean;
+  inpaintFaces?: boolean;
 }
 
 export interface PromptResponse {
@@ -119,6 +121,8 @@ export async function generateImages(params: GenerateParams): Promise<PromptResp
       negative_prompt: params.negativePrompt ?? "",
       num_images: params.numImages ?? 4,
       callback: params.callbackUrl,
+      super_resolution: params.superResolution ?? true,
+      inpaint_faces: params.inpaintFaces ?? true,
     },
   };
 

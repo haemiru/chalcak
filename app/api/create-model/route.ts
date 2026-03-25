@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (imageUrls.length < 5 || imageUrls.length > 15) {
+    if (imageUrls.length < 8 || imageUrls.length > 15) {
       return NextResponse.json(
-        { error: "사진은 5~15장 사이여야 합니다." },
+        { error: "사진은 8~15장 사이여야 합니다." },
         { status: 400 }
       );
     }
@@ -81,8 +81,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Astria API
-    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/astria`;
+    // Call Astria API — callback must be publicly reachable
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL?.startsWith("http://localhost")
+        ? process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : process.env.NEXT_PUBLIC_APP_URL
+        : process.env.NEXT_PUBLIC_APP_URL;
+    const callbackUrl = `${appUrl}/api/webhook/astria`;
     const tune = await createTune({
       title: `${userId}-${style}-${Date.now()}`,
       imageUrls,

@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const db = getSupabaseAdmin();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const appUrl =
+      rawAppUrl.startsWith("http://localhost") || !rawAppUrl
+        ? process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : rawAppUrl || "http://localhost:3000"
+        : rawAppUrl;
 
     // Astria sends tune callback when training completes
     if (body.tune) {
