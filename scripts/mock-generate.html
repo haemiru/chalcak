@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1" />
+  <title>AI 생성 중</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: '#2563EB' }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+  </style>
+</head>
+<body class="bg-white">
+  <div class="flex min-h-screen flex-col items-center justify-center px-5">
+    <div class="w-full max-w-sm text-center">
+      <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full" style="background:rgba(37,99,235,0.1)">
+        <span class="animate-pulse text-5xl">&#127912;</span>
+      </div>
+      <h1 class="text-xl font-bold">증명사진 사진 생성 중...</h1>
+      <!-- Progress bar -->
+      <div class="mt-6 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+        <div class="h-full rounded-full bg-primary transition-all" style="width:38%"></div>
+      </div>
+      <p class="mt-3 text-sm text-gray-500">
+        <span class="font-mono font-medium text-gray-700">09:27</span>
+        경과 · 약 16분 남음
+      </p>
+      <!-- Steps -->
+      <div class="mt-8 space-y-3 text-left">
+        <div class="flex items-center gap-3">
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">&#10003;</div>
+          <span class="text-sm font-medium text-gray-700">AI 모델 학습 준비</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">&#10003;</div>
+          <span class="text-sm font-medium text-gray-700">얼굴 특징 분석 중</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full animate-pulse border-2 border-primary text-xs font-bold text-primary"></div>
+          <span class="text-sm font-medium text-primary">스타일 적용 중</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-gray-200 text-xs font-bold text-gray-300"></div>
+          <span class="text-sm text-gray-400">최종 보정 중</span>
+        </div>
+      </div>
+      <!-- Push -->
+      <button class="mt-8 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-primary/20 text-sm font-medium text-primary" style="background:rgba(37,99,235,0.05)">
+        &#128276; 완료 알림 받기
+      </button>
+      <p class="mt-4 text-xs text-gray-400">
+        이 화면을 닫아도 괜찮아요.<br/>완료 시 이메일과 푸시 알림으로 알려드립니다.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
