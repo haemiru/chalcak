@@ -22,9 +22,9 @@ const SUPPORT_ITEMS = [
   {
     icon: "📱",
     title: "인스타그램 DM",
-    desc: "@chalcak.ai",
+    desc: "@solopreneur.jm",
     action: "DM 보내기",
-    href: "#",
+    href: "https://instagram.com/solopreneur.jm",
   },
 ] as const;
 
