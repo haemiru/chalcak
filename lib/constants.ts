@@ -1,8 +1,8 @@
 export const PLANS = {
-  trial: { price: 2900, credits: 5, label: "체험", type: "one-time" },
-  basic: { price: 4900, credits: 10, label: "베이직", type: "subscription" },
-  pro: { price: 9900, credits: 100, label: "프로", type: "subscription" },
-  premium: { price: 29000, credits: 1000, label: "프리미엄", type: "subscription" },
+  trial: { price: 2900, credits: 4, label: "체험", type: "one-time", tuneLimit: 1 },
+  basic: { price: 7900, credits: 20, label: "베이직", type: "subscription", tuneLimit: 1 },
+  pro: { price: 14900, credits: 52, label: "프로", type: "subscription", tuneLimit: 2 },
+  premium: { price: 39900, credits: 100, label: "프리미엄", type: "subscription", tuneLimit: 3 },
 } as const;
 
 export type PlanKey = keyof typeof PLANS;

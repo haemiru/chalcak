@@ -17,8 +17,8 @@ function Hero() {
         AI가 나를 기억합니다
       </h1>
       <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-gray-500 md:text-lg">
-        셀카 5장으로 나만의 AI 모델 생성 —
-        <br className="md:hidden" /> 찍지 않은 사진도 만들어드려요
+        셀카 8장으로 나만의 프로필 사진을
+        <br /> 어떤 사진이 필요하신가요?
       </p>
       <p className="mt-2 text-sm font-medium text-gray-700 md:text-base">
         사진관 3만원 → 찰칵AI 2,900원 체험
@@ -27,7 +27,7 @@ function Hero() {
         href="/upload"
         className="mt-8 inline-flex min-h-[48px] items-center rounded-xl bg-primary px-8 text-base font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-primary-dark active:scale-[0.97] md:text-lg"
       >
-        지금 체험하기 2,900원&nbsp;&rarr;
+        지금 체험하기&nbsp;&rarr;
       </Link>
       <p className="mt-3 text-xs text-gray-400">
         카드 등록 없이 바로 시작
@@ -240,7 +240,9 @@ function Pricing() {
                   <span className="text-sm font-normal text-gray-400">원</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  {plan.credits}장 생성
+                  {plan.type === "subscription"
+                    ? `월 ${plan.credits}장 생성`
+                    : `${plan.credits}장 생성`}
                 </p>
                 <Link
                   href="/upload"
@@ -337,7 +339,7 @@ function MobileCta() {
         href="/upload"
         className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/25 active:scale-[0.97]"
       >
-        지금 체험하기 2,900원&nbsp;&rarr;
+        지금 체험하기&nbsp;&rarr;
       </Link>
     </div>
   );
