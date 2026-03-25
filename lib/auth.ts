@@ -13,6 +13,7 @@ export async function signInWithKakao() {
     provider: "kakao",
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      scopes: "talk_message",
     },
   });
   if (error) throw error;

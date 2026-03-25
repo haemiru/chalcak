@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendCompletionEmail } from "@/lib/resend";
 import { sendPushNotification, type PushSubscriptionData } from "@/lib/push";
+import { sendKakaoMessage } from "@/lib/kakao-message";
 import { DB } from "@/lib/constants";
 
 function getSupabaseAdmin() {
@@ -31,23 +32,34 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     const resultUrl = `${baseUrl}/result?tuneId=${tuneId}`;
 
-    // 1. Send email notification — Auth에서 직접 이메일 가져오기 (chalcak_users 미등록 케이스 대응)
-    let email: string | null = null;
-
+    // 1. 유저 정보 조회 (이메일 + 카카오 토큰)
     const { data: userRow } = await db
       .from(DB.users)
-      .select("email")
+      .select("email, kakao_access_token")
       .eq("id", userId)
       .single();
 
-    if (userRow?.email) {
-      email = userRow.email;
-    } else {
-      // chalcak_users에 없으면 Supabase Auth에서 직접 조회
+    let email: string | null = userRow?.email ?? null;
+    if (!email) {
       const { data: authUser } = await db.auth.admin.getUserById(userId);
       email = authUser?.user?.email ?? null;
     }
 
+    // 1-a. 카카오톡 나에게 보내기
+    if (userRow?.kakao_access_token) {
+      try {
+        await sendKakaoMessage({
+          accessToken: userRow.kakao_access_token,
+          style,
+          resultUrl,
+        });
+        console.log(`Kakao message sent to user ${userId}`);
+      } catch (err) {
+        console.error("Kakao message failed:", err);
+      }
+    }
+
+    // 1-b. 이메일 알림
     if (email) {
       try {
         await sendCompletionEmail({
