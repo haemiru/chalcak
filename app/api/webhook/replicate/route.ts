@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createPrediction, STYLE_PROMPTS } from "@/lib/replicate";
+import { createPrediction, buildStylePrompt } from "@/lib/replicate";
 import { DB } from "@/lib/constants";
 import { persistImages } from "@/lib/storage";
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       // Find the generation record by tune_id (stores training ID)
       const { data: gen } = await db
         .from(DB.generations)
-        .select("style, user_id")
+        .select("style, user_id, gender")
         .eq("tune_id", trainingId)
         .single();
 
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const styleConfig = STYLE_PROMPTS[gen.style] ?? STYLE_PROMPTS["kakao"];
+      const styleConfig = buildStylePrompt(gen.style, gen.gender ?? "female");
 
       // Start image generation using the trained model version
       const prediction = await createPrediction({

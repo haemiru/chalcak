@@ -113,7 +113,7 @@ function GenerateContent() {
         const modelRes = await fetch("/api/create-model", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrls, style: styleId }),
+          body: JSON.stringify({ imageUrls, style: styleId, gender: upload.gender }),
         });
 
         if (!modelRes.ok) {

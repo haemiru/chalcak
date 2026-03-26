@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { generateImages, STYLE_PROMPTS } from "@/lib/astria";
+import { generateImages } from "@/lib/astria";
+import { buildStylePrompt } from "@/lib/replicate";
 import { DB } from "@/lib/constants";
 import { persistImages } from "@/lib/storage";
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       // 학습 완료 → 해당 generation의 style을 찾아 이미지 생성 요청
       const { data: gen } = await db
         .from(DB.generations)
-        .select("style, user_id")
+        .select("style, user_id, gender")
         .eq("tune_id", tuneId)
         .single();
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Generation not found" }, { status: 404 });
       }
 
-      const styleConfig = STYLE_PROMPTS[gen.style] ?? STYLE_PROMPTS["kakao"];
+      const styleConfig = buildStylePrompt(gen.style, gen.gender ?? "female");
 
       const prompt = await generateImages({
         tuneId,

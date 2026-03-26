@@ -24,45 +24,85 @@ function authHeaders(contentType = "application/json") {
 }
 
 // -- Style prompts (trigger word: TOK) --
-// 자연스러운 보정 공통 요소 — "사진 잘 받는 날" 느낌
-const NATURAL_ENHANCE =
-  "clear healthy skin, well-groomed appearance, flattering soft lighting, natural subtle retouching, photogenic";
+// 자연스러운 보정 — "사진 잘 받는 날" 느낌, 성별별 디테일
+const ENHANCE_FEMALE =
+  "clear radiant skin, soft feminine features, natural light makeup look, well-groomed eyebrows, flattering soft lighting, subtle skin smoothing, photogenic, youthful glow";
+const ENHANCE_MALE =
+  "clear healthy skin, clean-shaven or well-groomed facial hair, sharp jawline, flattering soft lighting, natural subtle retouching, photogenic, well-groomed appearance";
 const NATURAL_NEGATIVE =
-  "blemishes, dark circles, wrinkles, tired look, oily skin, uneven skin tone, harsh shadows on face, unflattering angle, distorted features, plastic surgery look, overly airbrushed, uncanny valley";
+  "blemishes, dark circles, wrinkles, tired look, oily skin, uneven skin tone, harsh shadows on face, unflattering angle, distorted features, plastic surgery look, overly airbrushed, uncanny valley, different person, changed face shape";
 
-export const STYLE_PROMPTS: Record<
-  string,
-  { prompt: string; negative: string; numImages: number }
-> = {
-  "id-photo": {
-    prompt:
-      `Professional Korean ID photo of TOK, formal white background, passport photo style, composed calm expression, front-facing, soft studio lighting, sharp focus, high resolution, wearing dark formal suit, ${NATURAL_ENHANCE}`,
-    negative:
-      `blurry, low quality, cartoon, illustration, sunglasses, hat, mask, side angle, ${NATURAL_NEGATIVE}`,
-    numImages: 4,
-  },
-  suit: {
-    prompt:
-      `Professional business portrait of TOK, wearing elegant dark navy suit with crisp white shirt, corporate headshot, soft diffused studio lighting, gentle bokeh background, approachable confident expression, slight natural smile, ${NATURAL_ENHANCE}, high resolution`,
-    negative:
-      `blurry, low quality, cartoon, casual clothes, sunglasses, hat, ${NATURAL_NEGATIVE}`,
-    numImages: 4,
-  },
-  kakao: {
-    prompt:
-      `Natural casual portrait of TOK, warm golden hour window lighting, gentle genuine smile, soft clean minimal background, Korean style profile photo, warm flattering color tone, relaxed comfortable expression, ${NATURAL_ENHANCE}`,
-    negative:
-      `blurry, low quality, overly filtered, heavy makeup, ${NATURAL_NEGATIVE}`,
-    numImages: 4,
-  },
-  instagram: {
-    prompt:
-      `Aesthetic Instagram portrait of TOK, cinematic golden hour lighting, beautiful creamy bokeh, stylish and trendy, rich warm colors, magazine editorial quality, natural confident pose, ${NATURAL_ENHANCE}`,
-    negative:
-      `blurry, low quality, dull colors, harsh lighting, ${NATURAL_NEGATIVE}`,
-    numImages: 4,
-  },
-};
+type GenderType = "female" | "male";
+
+function genderWord(gender: GenderType): string {
+  return gender === "female" ? "Korean woman" : "Korean man";
+}
+
+function enhance(gender: GenderType): string {
+  return gender === "female" ? ENHANCE_FEMALE : ENHANCE_MALE;
+}
+
+function dressCode(gender: GenderType, style: string): string {
+  if (style === "id-photo" || style === "suit") {
+    return gender === "female"
+      ? "wearing elegant dark blazer with white blouse"
+      : "wearing dark formal suit with crisp white shirt";
+  }
+  return "";
+}
+
+export function buildStylePrompt(
+  style: string,
+  gender: GenderType
+): { prompt: string; negative: string; numImages: number } {
+  const subject = `${genderWord(gender)} TOK`;
+  const enh = enhance(gender);
+  const dress = dressCode(gender, style);
+
+  const prompts: Record<string, { prompt: string; negative: string; numImages: number }> = {
+    "id-photo": {
+      prompt:
+        `Professional Korean ID photo of ${subject}, ${dress}, formal white background, passport photo style, composed calm expression, front-facing, soft studio lighting, sharp focus, high resolution, ${enh}`,
+      negative:
+        `blurry, low quality, cartoon, illustration, sunglasses, hat, mask, side angle, ${NATURAL_NEGATIVE}`,
+      numImages: 4,
+    },
+    suit: {
+      prompt:
+        `Professional business portrait of ${subject}, ${dress}, corporate headshot, soft diffused studio lighting, gentle bokeh background, approachable confident expression, slight natural smile, ${enh}, high resolution`,
+      negative:
+        `blurry, low quality, cartoon, casual clothes, sunglasses, hat, ${NATURAL_NEGATIVE}`,
+      numImages: 4,
+    },
+    kakao: {
+      prompt:
+        `Natural casual portrait of ${subject}, warm golden hour window lighting, gentle genuine smile, soft clean minimal background, Korean style profile photo, warm flattering color tone, relaxed comfortable expression, ${enh}`,
+      negative:
+        `blurry, low quality, overly filtered, heavy makeup, ${NATURAL_NEGATIVE}`,
+      numImages: 4,
+    },
+    instagram: {
+      prompt:
+        `Aesthetic Instagram portrait of ${subject}, cinematic golden hour lighting, beautiful creamy bokeh, stylish and trendy, rich warm colors, magazine editorial quality, natural confident pose, ${enh}`,
+      negative:
+        `blurry, low quality, dull colors, harsh lighting, ${NATURAL_NEGATIVE}`,
+      numImages: 4,
+    },
+  };
+
+  return prompts[style] ?? prompts["kakao"];
+}
+
+// Legacy compat — used by webhook (reads gender from DB)
+export const STYLE_PROMPTS = new Proxy(
+  {} as Record<string, { prompt: string; negative: string; numImages: number }>,
+  {
+    get(_target, prop: string) {
+      // Default to female when accessed without gender context (webhook will use buildStylePrompt)
+      return buildStylePrompt(prop, "female");
+    },
+  }
+);
 
 // -- Upload training data (images → zip → Replicate files API) --
 
@@ -148,6 +188,7 @@ interface CreateTrainingParams {
   destination: string;
   imageDataUrl: string;
   triggerWord: string;
+  gender: GenderType;
   webhookUrl?: string;
 }
 
@@ -173,10 +214,10 @@ export async function createTraining(
         input: {
           input_images: params.imageDataUrl,
           trigger_word: params.triggerWord,
-          steps: 1200,
+          steps: 1500,
           lora_rank: 16,
           autocaption: true,
-          autocaption_prefix: `a photo of ${params.triggerWord}, `,
+          autocaption_prefix: `a photo of ${params.triggerWord}, a ${genderWord(params.gender)}, `,
         },
         webhook: params.webhookUrl,
         webhook_events_filter: ["completed"],
@@ -237,9 +278,9 @@ export async function createPrediction(
       input: {
         prompt: params.prompt,
         num_outputs: params.numOutputs ?? 4,
-        num_inference_steps: 28,
+        num_inference_steps: 30,
         guidance_scale: 3.5,
-        lora_scale: 0.8,
+        lora_scale: 1.0,
         output_format: "png",
         output_quality: 95,
       },

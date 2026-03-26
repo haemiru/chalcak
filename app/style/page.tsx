@@ -3,18 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ACTIVE_STYLES, COMING_SOON_STYLES } from "@/lib/constants";
-import { useUpload } from "@/lib/upload-context";
+import { useUpload, type Gender } from "@/lib/upload-context";
 import ComingSoonModal from "@/components/ComingSoonModal";
 
 export default function StylePage() {
   const router = useRouter();
   const upload = useUpload();
   const [selectedStyle, setSelectedStyle] = useState<string | null>(upload.style);
+  const [gender, setGender] = useState<Gender>(upload.gender);
   const [modalStyle, setModalStyle] = useState<string | null>(null);
 
   function handleNext() {
     if (!selectedStyle) return;
     upload.setStyle(selectedStyle);
+    upload.setGender(gender);
     router.push(`/payment?style=${selectedStyle}`);
   }
 
@@ -29,6 +31,30 @@ export default function StylePage() {
       </header>
 
       <div className="mx-auto max-w-lg px-5">
+        {/* Gender selection */}
+        <div className="mb-5">
+          <p className="mb-2 text-sm font-semibold text-gray-700">성별</p>
+          <div className="flex gap-2">
+            {([
+              { value: "female" as Gender, label: "여성", emoji: "👩" },
+              { value: "male" as Gender, label: "남성", emoji: "👨" },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setGender(opt.value)}
+                className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 text-sm font-bold transition active:scale-[0.97] ${
+                  gender === opt.value
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                <span>{opt.emoji}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Active Styles */}
         <div className="grid grid-cols-2 gap-3">
           {ACTIVE_STYLES.map((style) => {

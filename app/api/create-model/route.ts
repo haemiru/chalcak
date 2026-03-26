@@ -36,6 +36,7 @@ async function getUserId(request: NextRequest): Promise<string | null> {
 interface CreateModelBody {
   imageUrls: string[];
   style: string;
+  gender?: "female" | "male";
 }
 
 export async function POST(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: CreateModelBody = await request.json();
-    const { imageUrls, style } = body;
+    const { imageUrls, style, gender } = body;
 
     if (!imageUrls?.length || !style) {
       return NextResponse.json(
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
       destination,
       imageDataUrl,
       triggerWord: "TOK",
+      gender: gender ?? "female",
       webhookUrl,
     });
 
@@ -154,6 +156,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       tune_id: training.id,
       style,
+      gender: gender ?? "female",
       image_urls: [],
     });
 
