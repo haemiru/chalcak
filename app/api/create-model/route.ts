@@ -100,22 +100,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Check tune limit — count tunes created this month
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const { count: tuneCount } = await db
-      .from(DB.generations)
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", monthStart);
+    // Skip for test accounts
+    const TEST_EMAILS = ["junominu@kakao.com"];
+    const { data: userProfile } = await db.auth.admin.getUserById(userId);
+    const isTestUser = TEST_EMAILS.includes(userProfile?.user?.email ?? "");
 
-    const plan = sub?.plan as PlanKey | undefined;
-    const tuneLimit = plan ? PLANS[plan]?.tuneLimit ?? 1 : 1;
+    if (!isTestUser) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { count: tuneCount } = await db
+        .from(DB.generations)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", monthStart);
 
-    if ((tuneCount ?? 0) >= tuneLimit) {
-      return NextResponse.json(
-        { error: `이번 달 모델 학습 횟수(${tuneLimit}회)를 초과했습니다.` },
-        { status: 403 }
-      );
+      const plan = sub?.plan as PlanKey | undefined;
+      const tuneLimit = plan ? PLANS[plan]?.tuneLimit ?? 1 : 1;
+
+      if ((tuneCount ?? 0) >= tuneLimit) {
+        return NextResponse.json(
+          { error: `이번 달 모델 학습 횟수(${tuneLimit}회)를 초과했습니다.` },
+          { status: 403 }
+        );
+      }
     }
 
     // Call Replicate API — webhook must be publicly reachable
