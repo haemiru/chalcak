@@ -118,7 +118,7 @@ export async function createModel(name: string): Promise<string> {
       owner,
       name,
       visibility: "private",
-      hardware: "gpu-a40-large",
+      hardware: "gpu-t4",
     }),
   });
 
