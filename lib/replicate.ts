@@ -24,36 +24,42 @@ function authHeaders(contentType = "application/json") {
 }
 
 // -- Style prompts (trigger word: TOK) --
+// 자연스러운 보정 공통 요소 — "사진 잘 받는 날" 느낌
+const NATURAL_ENHANCE =
+  "clear healthy skin, well-groomed appearance, flattering soft lighting, natural subtle retouching, photogenic";
+const NATURAL_NEGATIVE =
+  "blemishes, dark circles, wrinkles, tired look, oily skin, uneven skin tone, harsh shadows on face, unflattering angle, distorted features, plastic surgery look, overly airbrushed, uncanny valley";
+
 export const STYLE_PROMPTS: Record<
   string,
   { prompt: string; negative: string; numImages: number }
 > = {
   "id-photo": {
     prompt:
-      "Professional Korean ID photo of TOK, formal white background, passport photo style, neutral expression, front-facing, studio lighting, sharp focus, high resolution, wearing dark formal suit",
+      `Professional Korean ID photo of TOK, formal white background, passport photo style, composed calm expression, front-facing, soft studio lighting, sharp focus, high resolution, wearing dark formal suit, ${NATURAL_ENHANCE}`,
     negative:
-      "blurry, low quality, cartoon, illustration, sunglasses, hat, mask, side angle",
+      `blurry, low quality, cartoon, illustration, sunglasses, hat, mask, side angle, ${NATURAL_NEGATIVE}`,
     numImages: 4,
   },
   suit: {
     prompt:
-      "Professional business portrait of TOK, wearing elegant dark suit, corporate headshot, LinkedIn profile photo, studio lighting, bokeh background, confident expression, high resolution",
+      `Professional business portrait of TOK, wearing elegant dark navy suit with crisp white shirt, corporate headshot, soft diffused studio lighting, gentle bokeh background, approachable confident expression, slight natural smile, ${NATURAL_ENHANCE}, high resolution`,
     negative:
-      "blurry, low quality, cartoon, casual clothes, sunglasses, hat",
+      `blurry, low quality, cartoon, casual clothes, sunglasses, hat, ${NATURAL_NEGATIVE}`,
     numImages: 4,
   },
   kakao: {
     prompt:
-      "Natural casual portrait of TOK, warm lighting, soft smile, clean background, Korean style profile photo, gentle color tone, slightly candid look, high quality",
+      `Natural casual portrait of TOK, warm golden hour window lighting, gentle genuine smile, soft clean minimal background, Korean style profile photo, warm flattering color tone, relaxed comfortable expression, ${NATURAL_ENHANCE}`,
     negative:
-      "blurry, low quality, overly filtered, heavy makeup, studio feel",
+      `blurry, low quality, overly filtered, heavy makeup, ${NATURAL_NEGATIVE}`,
     numImages: 4,
   },
   instagram: {
     prompt:
-      "Aesthetic Instagram portrait of TOK, cinematic lighting, golden hour, beautiful bokeh, trendy and stylish, vibrant colors, magazine quality, Korean beauty aesthetic",
+      `Aesthetic Instagram portrait of TOK, cinematic golden hour lighting, beautiful creamy bokeh, stylish and trendy, rich warm colors, magazine editorial quality, natural confident pose, ${NATURAL_ENHANCE}`,
     negative:
-      "blurry, low quality, dull colors, harsh lighting, unflattering angle",
+      `blurry, low quality, dull colors, harsh lighting, ${NATURAL_NEGATIVE}`,
     numImages: 4,
   },
 };
