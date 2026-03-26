@@ -38,6 +38,7 @@ function GenerateContent() {
     "uploading"
   );
   const [elapsed, setElapsed] = useState(0);
+  const createdAtRef = useRef<string | null>(null);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushDenied, setPushDenied] = useState(false);
   const [pushUnsupported, setPushUnsupported] = useState(false);
@@ -140,6 +141,9 @@ function GenerateContent() {
     try {
       const res = await fetch(`/api/generate/status?tuneId=${tuneId}`);
       const data = await res.json();
+      if (data.createdAt && !createdAtRef.current) {
+        createdAtRef.current = data.createdAt;
+      }
       if (data.status === "completed") {
         setStatus("completed");
         router.push(`/result?tuneId=${tuneId}&style=${styleId}`);
@@ -152,9 +156,16 @@ function GenerateContent() {
   useEffect(() => {
     if (status !== "processing") return;
 
-    // Elapsed timer (every second)
+    // Elapsed timer — calculate from server created_at (survives page navigation)
     const timer = setInterval(() => {
-      setElapsed((prev) => prev + 1);
+      if (createdAtRef.current) {
+        const diff = Math.floor(
+          (Date.now() - new Date(createdAtRef.current).getTime()) / 1000
+        );
+        setElapsed(diff > 0 ? diff : 0);
+      } else {
+        setElapsed((prev) => prev + 1);
+      }
     }, 1000);
 
     // Polling (every 30s)

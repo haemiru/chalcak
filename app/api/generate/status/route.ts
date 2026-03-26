@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       style: data.style,
       status: isComplete ? "completed" : "processing",
       imageUrls: isComplete ? data.image_urls : [],
+      createdAt: data.created_at,
     });
   } catch (error) {
     console.error("Status check error:", error);
