@@ -33,7 +33,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className="bg-white pb-16 pt-12 text-gray-900 antialiased">
+      <body className="bg-white pb-16 pt-12 text-gray-900 antialiased md:pb-0">
         <GlobalHeader />
         <UploadProvider>{children}</UploadProvider>
         <BottomNav />

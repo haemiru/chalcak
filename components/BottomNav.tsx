@@ -25,7 +25,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur-sm safe-bottom">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-sm safe-bottom md:hidden">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-around">
         {items.map((item) => {
           const active =
