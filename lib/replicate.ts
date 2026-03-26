@@ -2,7 +2,7 @@ const REPLICATE_API_URL = "https://api.replicate.com/v1";
 
 // Flux LoRA trainer version
 const FLUX_LORA_TRAINER_VERSION =
-  "d995297071a44dcb72244e6c19462111649ec86a9646c32df56daa7f14801199";
+  "26dce37af90b9d997eeb970d92e47de3064d46c300504ae376c75bef6a9022d2";
 
 function getApiToken(): string {
   const token = process.env.REPLICATE_API_TOKEN;
