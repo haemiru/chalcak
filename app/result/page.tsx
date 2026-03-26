@@ -210,13 +210,13 @@ function ResultContent() {
               </p>
               <div className="mt-4 rounded-xl bg-primary/5 p-3">
                 <p className="text-2xl font-extrabold text-primary">
-                  월 4,900원
+                  월 7,900원
                   <span className="text-xs font-normal text-gray-400">
                     부터
                   </span>
                 </p>
                 <p className="mt-0.5 text-xs text-gray-400">
-                  매달 10장 생성 · 언제든 해지
+                  매달 20장 생성 · 언제든 해지
                 </p>
               </div>
               <Link
