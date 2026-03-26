@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      await db.from(DB.users).upsert(
+      const { error: upsertError } = await db.from(DB.users).upsert(
         {
           id: session.user.id,
           email: session.user.email,
@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
         },
         { onConflict: "id" }
       );
+      if (upsertError) {
+        console.error("Failed to save Kakao tokens:", upsertError);
+      }
     }
   }
 
