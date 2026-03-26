@@ -8,8 +8,6 @@ import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 export default function GlobalHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-
   useEffect(() => {
     const supabase = createSupabaseBrowser();
     supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
@@ -44,7 +42,6 @@ export default function GlobalHeader() {
 
   async function handleLogout() {
     await createSupabaseBrowser().auth.signOut();
-    setMenuOpen(false);
     window.location.href = "/";
   }
 
@@ -58,49 +55,19 @@ export default function GlobalHeader() {
         {loading ? (
           <div className="h-5 w-20 animate-pulse rounded bg-gray-100" />
         ) : user ? (
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm transition hover:bg-gray-50"
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium text-gray-600 transition hover:text-primary"
             >
-              <span className="max-w-[120px] truncate font-medium">
-                {displayName}
-              </span>
-              {providerLabel && (
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">
-                  {providerLabel}
-                </span>
-              )}
-              <span className="text-gray-300">▾</span>
+              내 사진첩
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-400 transition hover:text-red-500"
+            >
+              로그아웃
             </button>
-
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
-                  <p className="px-3 py-2 text-xs text-gray-400 truncate">
-                    {user.email}
-                  </p>
-                  <hr className="border-gray-100" />
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2 text-sm hover:bg-gray-50"
-                  >
-                    내 사진첩
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-gray-50"
-                  >
-                    로그아웃
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         ) : (
           <Link
