@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createPrediction, STYLE_PROMPTS } from "@/lib/replicate";
 import { DB } from "@/lib/constants";
+import { persistImages } from "@/lib/storage";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -139,10 +140,13 @@ export async function POST(request: NextRequest) {
 
       const trainingId = gen.tune_id;
 
-      // Save generated image URLs
+      // Persist images to Supabase Storage (prevents URL expiration)
+      const storedUrls = await persistImages(db, gen.user_id, trainingId, images);
+
+      // Save persisted image URLs
       const { error: updateError } = await db
         .from(DB.generations)
-        .update({ image_urls: images })
+        .update({ image_urls: storedUrls })
         .eq("prediction_id", predictionId);
 
       if (updateError) {

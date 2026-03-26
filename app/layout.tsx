@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { UploadProvider } from "@/lib/upload-context";
 import GlobalHeader from "@/components/GlobalHeader";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,9 +33,10 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className="bg-white pt-12 text-gray-900 antialiased">
+      <body className="bg-white pb-16 pt-12 text-gray-900 antialiased">
         <GlobalHeader />
         <UploadProvider>{children}</UploadProvider>
+        <BottomNav />
       </body>
     </html>
   );

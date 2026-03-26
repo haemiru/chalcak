@@ -90,7 +90,7 @@ export default function GlobalHeader() {
                     onClick={() => setMenuOpen(false)}
                     className="block px-3 py-2 text-sm hover:bg-gray-50"
                   >
-                    대시보드
+                    내 사진첩
                   </Link>
                   <button
                     onClick={handleLogout}

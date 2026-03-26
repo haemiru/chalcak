@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateImages, STYLE_PROMPTS } from "@/lib/astria";
 import { DB } from "@/lib/constants";
+import { persistImages } from "@/lib/storage";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -76,22 +77,27 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true, action: "no_images" });
       }
 
-      // DB에 생성된 이미지 URL 저장
-      const { error: updateError } = await db
-        .from(DB.generations)
-        .update({ image_urls: images })
-        .eq("tune_id", tuneId);
-
-      if (updateError) {
-        console.error("Failed to update generation:", updateError);
-      }
-
-      // 크레딧 차감
+      // generation 레코드 조회 (user_id 필요)
       const { data: gen } = await db
         .from(DB.generations)
         .select("user_id, style")
         .eq("tune_id", tuneId)
         .single();
+
+      // Persist images to Supabase Storage (prevents URL expiration)
+      const storedUrls = gen
+        ? await persistImages(db, gen.user_id, tuneId, images)
+        : images;
+
+      // DB에 저장된 이미지 URL 업데이트
+      const { error: updateError } = await db
+        .from(DB.generations)
+        .update({ image_urls: storedUrls })
+        .eq("tune_id", tuneId);
+
+      if (updateError) {
+        console.error("Failed to update generation:", updateError);
+      }
 
       if (gen) {
         const { data: sub } = await db

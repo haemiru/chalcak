@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import { PLANS, ACTIVE_STYLES, DB, type PlanKey } from "@/lib/constants";
@@ -272,12 +271,17 @@ export default function DashboardPage() {
                             key={i}
                             className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100"
                           >
-                            <Image
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                               src={url}
-                              alt={`${style?.name} ${i + 1}`}
-                              fill
-                              className="object-cover"
-                              unoptimized
+                              alt={`${style?.name ?? gen.style} ${i + 1}`}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = "none";
+                                target.parentElement!.innerHTML =
+                                  '<span class="flex h-full w-full items-center justify-center text-lg text-gray-300">📷</span>';
+                              }}
                             />
                           </div>
                         ))}
