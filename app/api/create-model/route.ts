@@ -143,12 +143,22 @@ export async function POST(request: NextRequest) {
     });
 
     // Save to generations table (store training ID in tune_id column)
-    await db.from(DB.generations).insert({
+    const { error: insertError } = await db.from(DB.generations).insert({
       user_id: userId,
       tune_id: training.id,
       style,
       image_urls: [],
     });
+
+    if (insertError) {
+      console.error("Failed to insert generation:", insertError);
+      return NextResponse.json(
+        { error: "생성 기록 저장에 실패했습니다." },
+        { status: 500 }
+      );
+    }
+
+    console.log(`Training started: ${training.id} for user ${userId}, style ${style}`);
 
     return NextResponse.json(
       { tuneId: training.id, status: "processing" },
