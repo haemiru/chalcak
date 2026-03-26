@@ -173,8 +173,8 @@ export async function createTraining(
         input: {
           input_images: params.imageDataUrl,
           trigger_word: params.triggerWord,
-          steps: 2000,
-          lora_rank: 64,
+          steps: 1200,
+          lora_rank: 16,
           autocaption: true,
           autocaption_prefix: `a photo of ${params.triggerWord}, `,
         },
@@ -239,6 +239,7 @@ export async function createPrediction(
         num_outputs: params.numOutputs ?? 4,
         num_inference_steps: 28,
         guidance_scale: 3.5,
+        lora_scale: 0.8,
         output_format: "png",
         output_quality: 95,
       },
