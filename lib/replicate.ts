@@ -167,8 +167,8 @@ export async function createTraining(
         input: {
           input_images: params.imageDataUrl,
           trigger_word: params.triggerWord,
-          steps: 1500,
-          lora_rank: 32,
+          steps: 2000,
+          lora_rank: 64,
           autocaption: true,
           autocaption_prefix: `a photo of ${params.triggerWord}, `,
         },
