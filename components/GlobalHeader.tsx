@@ -55,12 +55,21 @@ export default function GlobalHeader() {
         {loading ? (
           <div className="h-5 w-20 animate-pulse rounded bg-gray-100" />
         ) : user ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="max-w-[80px] truncate text-sm font-medium text-gray-700">
+              {displayName}
+            </span>
+            {providerLabel && (
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">
+                {providerLabel}
+              </span>
+            )}
+            <span className="text-gray-200">|</span>
             <Link
               href="/dashboard"
               className="text-sm font-medium text-gray-600 transition hover:text-primary"
             >
-              내 사진첩
+              사진첩
             </Link>
             <button
               onClick={handleLogout}
